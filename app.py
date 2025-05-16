@@ -21,11 +21,11 @@ app.secret_key = os.environ["FLASK_SECRET_KEY"]
 
 # Cookie-konfiguration for maksimal sikkerhed
 app.config.update({
-    'SESSION_COOKIE_SECURE': True,
-    'SESSION_COOKIE_HTTPONLY': True,
-    'SESSION_COOKIE_SAMESITE': 'Strict',
-    'PERMANENT_SESSION_LIFETIME': timedelta(minutes=30),
-    'SESSION_COOKIE_NAME': 'vient_session',
+    'SESSION_COOKIE_SECURE': True, # Kun send cookies over HTTPS
+    'SESSION_COOKIE_HTTPONLY': True, # Forhindrer JavaScript i at få adgang til cookien
+    'SESSION_COOKIE_SAMESITE': 'Strict', # Dette hjælper med at forhindre CSRF-angreb
+    'PERMANENT_SESSION_LIFETIME': timedelta(minutes=30), # session udløber efter 30 minutter
+    'SESSION_COOKIE_NAME': 'viento_session', # Navnet på session-cookien
 })
 
 ##############################
