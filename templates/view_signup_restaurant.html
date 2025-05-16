@@ -4,13 +4,13 @@
 
     <h2 class="text-(2rem) text-a-center py-8" md="text-(3rem)">Sign up as restaurant</h2>
     <form id="frm_user_signup" class="w-60% d-flex flex-col gap-4 mx-auto" md="w-40%">
-     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="d-flex flex-col">
             <label for="user_name" class="d-flex pb-1">
                 <span>Restaurant name</span>
                 <span class="ml-auto text-c-gray:+25">{{ x.USER_NAME_MIN }} to {{ x.USER_NAME_MAX }}
                     characters
-                </span>
+                </span> 
             </label>
             <input name="user_name" type="text" mix-check="{{ x.USER_NAME_REGEX }}">
         </div>
