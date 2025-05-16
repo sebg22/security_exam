@@ -1,20 +1,32 @@
-from flask import Flask, session, render_template, redirect, url_for, make_response, request, jsonify, send_from_directory
-from flask_session import Session
-from werkzeug.security import generate_password_hash
-from werkzeug.security import check_password_hash
-import x
-import uuid
-import time
-import redis
-import os
-import random
-
+from flask import Flask, session, render_template, redirect, url_for, request, send_from_directory
+from werkzeug.security import generate_password_hash, check_password_hash
+from flask_wtf import CSRFProtect
+from datetime import timedelta
+from dotenv import load_dotenv
 from icecream import ic
-ic.configureOutput(prefix=f'***** | ', includeContext=True)
+import x, uuid, time, os, random
 
+# Load .env før Flask-app initialiseres
+load_dotenv()
+ic.configureOutput(prefix='***** | ', includeContext=True)
+
+# Flask-app
 app = Flask(__name__)
-app.config['SESSION_TYPE'] = 'filesystem'  # or 'redis', etc.
-Session(app)
+
+# CSRF-beskyttelse
+csrf = CSRFProtect(app)
+
+# Hemmelig nøgle fra miljø
+app.secret_key = os.environ["FLASK_SECRET_KEY"]
+
+# Cookie-konfiguration for maksimal sikkerhed
+app.config.update({
+    'SESSION_COOKIE_SECURE': True,
+    'SESSION_COOKIE_HTTPONLY': True,
+    'SESSION_COOKIE_SAMESITE': 'Strict',
+    'PERMANENT_SESSION_LIFETIME': timedelta(minutes=30),
+    'SESSION_COOKIE_NAME': 'vient_session',
+})
 
 ##############################
 ##############################

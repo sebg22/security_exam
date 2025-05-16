@@ -15,6 +15,7 @@
         <p class="text-(1rem)" md="text-(1.5rem)">Update or delete your profile here</p>
         <section class="pt-10 w-70%" lg="d-flex flex-row w-auto">
             <form id="frm_user_update" lg="d-flex flex-row a-items-end">
+             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="d-flex flex-col mb-4" lg="mr-4">
                     <label for="user_name" class="d-flex pb-1">
                         <span>Name</span>
@@ -50,6 +51,7 @@
                 </button>
             </form>
             <form id="frm_user_delete-{{user['user_pk']}}" lg="d-flex a-items-end mb-4">
+             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <button type="button" id="openDialog" class="cursor-pointer bg-c-(#FE5B52) w-full">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="#F6F6F6" class="bi bi-trash"
                         viewBox="0 0 16 16">

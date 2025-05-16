@@ -5,4 +5,6 @@ flask-session == 0.8.0
 redis == 5.2.0
 requests == 2.32.3 
 faker == 30.8.2
-pillow == 11.0.0 
+pillow == 11.0.0
+python-dotenv
+flask-wtf 

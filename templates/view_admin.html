@@ -7,6 +7,7 @@
                 {% if user['role_name'] != 'admin' %}
             <div class="pb-2 pt-2 border-c-(#E4E4E4) border-b-2">
                 <form id="frm_user_xblock-{{user['user_pk']}}" class="d-flex j-content-between">
+                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <div class="d-flex a-items-center gap-5">
                         <p class="border-c-(#E4E4E4) border-r-2 pr-5">{{ user['user_email'] }}</p>
                         <p>{{ user['role_name'] }}</p>
@@ -31,6 +32,7 @@
             {% for item in items %}
             <div class="pb-2 pt-2 border-c-(#E4E4E4) border-b-2">
                 <form id="frm_item_xblock-{{item['item_pk']}}" class="d-flex j-content-between">
+                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <div class="d-flex a-items-center gap-5">
                         <p class="border-c-(#E4E4E4) border-r-2 pr-5">{{item['item_title']}}</p>
                         <p>{{ item['item_price'] }} kr.</p>
