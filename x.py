@@ -31,10 +31,10 @@ def raise_custom_exception(error, status_code):
 ##############################
 def db():
     db = mysql.connector.connect(
-        host=os.getenv("DB_HOST", "mysql"),
-        user=os.getenv("DB_USER", "root"),
-        password=os.getenv("DB_PASSWORD", "password"),
-        database=os.getenv("DB_NAME", "company")
+        host=os.getenv("DB_HOST"),
+        user=os.getenv("DB_USER"),
+        password=os.getenv("DB_PASSWORD"),
+        database=os.getenv("DB_NAME")
     )
     cursor = db.cursor(dictionary=True)
     return db, cursor
@@ -42,10 +42,10 @@ def db():
 ##############################
 # def comments_db():
 #     db = mysql.connector.connect(
-#         host=os.getenv("COMMENTS_DB_HOST", "fulldemo_mysql_comments"),  # <-- Here is the fix
-#         user=os.getenv("COMMENTS_DB_USER", "root"),
-#         password=os.getenv("COMMENTS_DB_PASSWORD", "password"),
-#         database=os.getenv("COMMENTS_DB_NAME", "comments_db")
+#         host=os.getenv("COMMENTS_DB_HOST"),  # <-- Here is the fix
+#         user=os.getenv("COMMENTS_DB_USER"),
+#         password=os.getenv("COMMENTS_DB_PASSWORD"),
+#         database=os.getenv("COMMENTS_DB_NAME")
 #     )
 #     cursor = db.cursor(dictionary=True)
 #     return db, cursor

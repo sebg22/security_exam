@@ -9,6 +9,7 @@ import time
 import redis
 import os
 import random
+import traceback
 
 from icecream import ic
 ic.configureOutput(prefix=f'***** | ', includeContext=True)
@@ -127,10 +128,8 @@ def view_restaurant_items(restaurant_id):
         # Pop'er/remover basket from session to make sure it's empty
         session.pop("basket", None)
 
-        print("🔍 Connecting to main DB")
         db, cursor = x.db()
 
-        print(f"🔍 Fetching restaurant with ID: {restaurant_id}")
         # Fetch the specific restaurant by its UUID
         cursor.execute("""
             SELECT * FROM users 
@@ -145,7 +144,6 @@ def view_restaurant_items(restaurant_id):
         """, (str(restaurant_id),))
 
         restaurant = cursor.fetchone()
-        print("🍽️ Restaurant fetched: ", restaurant)
 
         # Handle case where restaurant does not exist
         if not restaurant:
@@ -159,7 +157,6 @@ def view_restaurant_items(restaurant_id):
         """, (str(restaurant_id),))
 
         items = cursor.fetchall()
-        print("🍽️ Items fetched: ", items)
 
         # If there are no items, just render the template
         if not items:
@@ -176,7 +173,6 @@ def view_restaurant_items(restaurant_id):
         """
         cursor.execute(query, tuple([item["item_pk"] for item in items]))
         comments = cursor.fetchall()
-        print("💬 Comments fetched: ", comments)
 
         # Render the template with fetched data
         return render_template(
@@ -188,19 +184,14 @@ def view_restaurant_items(restaurant_id):
         )
 
     except Exception as ex:
-        print("🚨 Exception occurred:", ex)
         if isinstance(ex, x.CustomException):
             toast = render_template("___toast.html", message=ex.message)
             return f"""<template mix-target="#toast" mix-bottom>{toast}</template>""", ex.code
         if isinstance(ex, x.mysql.connector.Error):
-            print("🚨 Database error:", ex)
             toast = render_template("___toast.html", message="database error, system under maintenance")
             return f"""<template mix-target="#toast">{toast}</template>""", 500
-        
-        print("🚨 General error:", ex)
         toast = render_template("___toast.html", message="system error, system under maintenance")
         return f"""<template mix-target="#toast">{toast}.</template>""", 500
-    
     finally:
         if "cursor" in locals(): cursor.close()
         if "db" in locals(): db.close()
@@ -768,9 +759,6 @@ def create_item():
 ##############################
 @app.post("/items/<uuid:item_pk>/comments")
 def add_comment(item_pk):
-    print("Route hit successfully")
-    print(f"Received item ID: {item_pk}")
-
     data = request.form
     print("Received data:", data)
 
@@ -785,11 +773,9 @@ def add_comment(item_pk):
     user_pk = user.get("user_pk") if user else None
 
     # Connect to the database
-    print("Connecting to database...")
     db, cursor = x.db()
 
     # Prepare the SQL query
-    print("Preparing SQL query...")
     created_at = datetime.now()
     updated_at = datetime.now()
 
@@ -799,7 +785,6 @@ def add_comment(item_pk):
     """
 
     # Generate a new UUID for the comment
-    import uuid
     comment_pk = str(uuid.uuid4())
 
     # Print out the final statement before executing
@@ -811,10 +796,7 @@ def add_comment(item_pk):
         # Perform the database insertion
         cursor.execute(sql, (comment_pk, user_pk, str(item_pk), comment_text, created_at, updated_at))
         db.commit()
-        print("Comment inserted successfully")
     except Exception as ex:
-        print("Exception occurred:", ex)
-        import traceback
         traceback.print_exc()
         return "Database error", 500
     finally:
