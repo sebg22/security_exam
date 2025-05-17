@@ -5,10 +5,11 @@
 
 <head>
     <title>Restaurant Items</title>
+    <script src="{{ url_for('static', filename='commentHandler.js') }}" defer></script>
 </head>
 
 <body>
-    <a href="{{url_for('view_customer')}}"
+    <a href="{{ url_for('view_customer') }}"
         class="cursor-pointer ml-10 d-flex a-items-center gap-2 text-c-(#00C2E8) w-20">
         <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="#00C2E8" class="bi bi-arrow-left"
             viewBox="0 0 16 16">
@@ -17,7 +18,9 @@
         </svg>
         Back
     </a>
+
     <h1 class="text-(3rem) text-a-center">{{ restaurant['user_name'] }}</h1>
+
     <div class="d-grid cols-1 mx-5" md="cols-3 mx-10 a-items-start">
         <section class="d-grid cols-1 gap-3" md="col-2 cols-2" xl="cols-3">
             {% for item in items %}
@@ -25,6 +28,8 @@
                 <img class="w-full h-150px obj-f-cover" src="/static/dishes/{{item['item_image_1']}}" alt="">
                 <p class="text-w-bold text-(1.2rem)">{{ item['item_title'] }}</p>
                 <p>{{ item['item_price'] }} kr.</p>
+
+                <!-- Add to Basket -->
                 <form id="frm-add-basket-{{ item['item_pk'] }}">
                     <button mix-post="/restaurant/{{restaurant['user_pk']}}/add_to_basket/{{ item['item_title'] }}"
                         mix-data="#frm-add-basket-{{ item['item_pk'] }}" mix-target="#basket"
@@ -32,9 +37,37 @@
                         Put item in basket
                     </button>
                 </form>
+
+                <!-- Display Comments -->
+                <div class="mt-4">
+                    <h4>Comments:</h4>
+                    <div id="comments-{{ item['item_pk'] }}">
+                        {% for comment in comments %}
+                            {% if comment['item_fk'] == item['item_pk'] %}
+                                <p><strong>{{ comment['user_name'] }}</strong> - {{ comment['created_at'] }}:</p>
+                                <p>{{ comment['comment_text'] }}</p>
+                                <hr>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Add a Comment -->
+                <form id="frm-add-comment-{{ item['item_pk'] }}" 
+                      action="/items/{{ item['item_pk'] }}/comments" 
+                      method="post" 
+                      class="mt-4 d-flex flex-col gap-2 comment-form">
+                    <textarea name="comment_text" placeholder="Leave a comment..." rows="2"
+                        class="w-full border-1 border-c-(#E4E4E4) rounded-md pa-2"></textarea>
+                    <button class="bg-c-(#00C2E8) text-c-(#FFFFFF) px-4 py-2 rounded-3 w-full">
+                        Submit Comment
+                    </button>
+                </form>
             </article>
             {% endfor %}
         </section>
+
+        <!-- Basket Section -->
         <section class="border-1 border-c-(#00C2E8) rounded-md pa-4 ma-2 bg-c-(#EBF7FD)" md="col-1">
             <section>
                 <h2 class="text-a-center">Your Basket</h2>
@@ -55,3 +88,6 @@
     </div>
 
     {% include "_bottom.html" %}
+</body>
+
+</html>

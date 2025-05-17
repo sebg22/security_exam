@@ -31,13 +31,24 @@ def raise_custom_exception(error, status_code):
 ##############################
 def db():
     db = mysql.connector.connect(
-        host="mysql",      # Replace with your MySQL server's address or docker service name "mysql"
-        user="root",  # Replace with your MySQL username
-        password="password",  # Replace with your MySQL password
-        database="company"   # Replace with your MySQL database name
+        host=os.getenv("DB_HOST", "mysql"),
+        user=os.getenv("DB_USER", "root"),
+        password=os.getenv("DB_PASSWORD", "password"),
+        database=os.getenv("DB_NAME", "company")
     )
     cursor = db.cursor(dictionary=True)
     return db, cursor
+
+##############################
+# def comments_db():
+#     db = mysql.connector.connect(
+#         host=os.getenv("COMMENTS_DB_HOST", "fulldemo_mysql_comments"),  # <-- Here is the fix
+#         user=os.getenv("COMMENTS_DB_USER", "root"),
+#         password=os.getenv("COMMENTS_DB_PASSWORD", "password"),
+#         database=os.getenv("COMMENTS_DB_NAME", "comments_db")
+#     )
+#     cursor = db.cursor(dictionary=True)
+#     return db, cursor
 
 ##############################
 def no_cache(view):
