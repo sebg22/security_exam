@@ -2,12 +2,14 @@ from flask import Flask, session, render_template, redirect, url_for, make_respo
 from flask_session import Session
 from werkzeug.security import generate_password_hash
 from werkzeug.security import check_password_hash
+from datetime import datetime
 import x
 import uuid
 import time
 import redis
 import os
 import random
+import traceback
 
 from icecream import ic
 ic.configureOutput(prefix=f'***** | ', includeContext=True)
@@ -25,9 +27,9 @@ def _________GET_________(): pass
 ##############################
 ##############################
 ##############################
-@app.get("/images/<image_id>")
+@app.get("/static/dishes/<image_id>")
 def view_image(image_id):
-    return send_from_directory("./images", image_id)
+    return send_from_directory("./static/dishes", image_id)
 
 ##############################
 @app.get("/")
@@ -74,7 +76,7 @@ def view_customer():
             JOIN users_roles ON users.user_pk = users_roles.user_role_user_fk
             JOIN roles ON users_roles.user_role_role_fk = roles.role_pk
             LEFT JOIN items ON users.user_pk = items.item_user_fk
-            WHERE roles.role_name = 'restaurant' AND users.user_blocked_at = 0
+            WHERE roles.role_name = 'restaurant' AND users.user_blocked_at = 0 AND users.user_deleted_at = 0
             GROUP BY users.user_pk -- Group by user to avoid duplicates
             """)
         restaurants = cursor.fetchall()
@@ -121,8 +123,8 @@ def view_restaurant_items(restaurant_id):
     if not session.get("user", ""):
         return redirect(url_for("view_login"))
     user = session.get("user")
+
     try:
-    
         # Pop'er/remover basket from session to make sure it's empty
         session.pop("basket", None)
 
@@ -139,9 +141,7 @@ def view_restaurant_items(restaurant_id):
                     SELECT role_pk FROM roles WHERE role_name = 'restaurant'
                 )
             )
-        """, (str(restaurant_id),))  # Pass UUID as string in tuple
-
-        print("Restaurant ID:", str(restaurant_id))
+        """, (str(restaurant_id),))
 
         restaurant = cursor.fetchone()
 
@@ -154,19 +154,40 @@ def view_restaurant_items(restaurant_id):
             SELECT *
             FROM items
             WHERE item_user_fk = %s AND item_deleted_at = 0 AND item_blocked_at = 0
-        """, (str(restaurant_id),))  # Pass UUID as string in tuple
+        """, (str(restaurant_id),))
 
         items = cursor.fetchall()
 
-        return render_template("view_restaurants_items.html", user=user, restaurant=restaurant, items=items)
+        # If there are no items, just render the template
+        if not items:
+            return render_template("view_restaurants_items.html", user=user, restaurant=restaurant, items=[], comments=[])
+
+        # Fetch comments for the items
+        format_strings = ', '.join(['%s'] * len(items))
+        query = f"""
+            SELECT 
+                comment_pk, comment_text, created_at, user_name, item_fk
+            FROM comments
+            LEFT JOIN users ON comments.user_fk = users.user_pk
+            WHERE comments.item_fk IN ({format_strings})
+        """
+        cursor.execute(query, tuple([item["item_pk"] for item in items]))
+        comments = cursor.fetchall()
+
+        # Render the template with fetched data
+        return render_template(
+            "view_restaurants_items.html",
+            user=user,
+            restaurant=restaurant,
+            items=items,
+            comments=comments
+        )
 
     except Exception as ex:
-        ic(ex)
         if isinstance(ex, x.CustomException):
             toast = render_template("___toast.html", message=ex.message)
             return f"""<template mix-target="#toast" mix-bottom>{toast}</template>""", ex.code
         if isinstance(ex, x.mysql.connector.Error):
-            ic(ex)
             toast = render_template("___toast.html", message="database error, system under maintenance")
             return f"""<template mix-target="#toast">{toast}</template>""", 500
         toast = render_template("___toast.html", message="system error, system under maintenance")
@@ -258,9 +279,9 @@ def view_restaurant():
         items = cursor.fetchall()
         
         for item in items:
-            item["item_image_1_url"] = f"/images/{item['item_image_1']}" if item["item_image_1"] else None
-            item["item_image_2_url"] = f"/images/{item['item_image_2']}" if item["item_image_2"] else None
-            item["item_image_3_url"] = f"/images/{item['item_image_3']}" if item["item_image_3"] else None
+            item["item_image_1_url"] = f"/static/dishes/{item['item_image_1']}" if item["item_image_1"] else None
+            item["item_image_2_url"] = f"/static/dishes/{item['item_image_2']}" if item["item_image_2"] else None
+            item["item_image_3_url"] = f"/static/dishes/{item['item_image_3']}" if item["item_image_3"] else None
 
     except Exception as ex:
         ic(ex)
@@ -691,6 +712,7 @@ def create_item():
         item_pk = str(uuid.uuid4())
         item_title = x.validate_item_title()
         item_price = x.validate_item_price()
+        
 
         if not (1 <= item_price <= 1000.00):
             raise x.CustomException("Price must be between 1 and 999.99", 400)
@@ -733,6 +755,56 @@ def create_item():
     finally:
         if "cursor" in locals(): cursor.close()
         if "db" in locals(): db.close()
+
+##############################
+@app.post("/items/<uuid:item_pk>/comments")
+def add_comment(item_pk):
+    data = request.form
+    print("Received data:", data)
+
+    # Check if the data contains 'comment_text'
+    comment_text = data.get("comment_text")
+    if not comment_text:
+        print("No comment text provided")
+        return "Comment text is required", 400
+
+    # Get the current user from the session
+    user = session.get("user")
+    user_pk = user.get("user_pk") if user else None
+
+    # Connect to the database
+    db, cursor = x.db()
+
+    # Prepare the SQL query
+    created_at = datetime.now()
+    updated_at = datetime.now()
+
+    sql = """
+        INSERT INTO comments (comment_pk, user_fk, item_fk, comment_text, created_at, updated_at)
+        VALUES (%s, %s, %s, %s, %s, %s)
+    """
+
+    # Generate a new UUID for the comment
+    comment_pk = str(uuid.uuid4())
+
+    # Print out the final statement before executing
+    print("Prepared statement:")
+    print(f"SQL: {sql}")
+    print(f"Data: ({comment_pk}, {user_pk}, {item_pk}, {comment_text})")
+
+    try:
+        # Perform the database insertion
+        cursor.execute(sql, (comment_pk, user_pk, str(item_pk), comment_text, created_at, updated_at))
+        db.commit()
+    except Exception as ex:
+        traceback.print_exc()
+        return "Database error", 500
+    finally:
+        cursor.close()
+        db.close()
+
+    return "Comment added successfully", 201
+
 
 ##############################
 @app.post("/restaurant/<uuid:restaurant_id>/add_to_basket/<item_title>")
@@ -1387,5 +1459,7 @@ def verify_user(verification_key):
     finally:
         if "cursor" in locals(): cursor.close()
         if "db" in locals(): db.close()
+
+
 
 
