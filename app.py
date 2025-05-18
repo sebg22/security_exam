@@ -1,32 +1,45 @@
 from flask import Flask, session, render_template, redirect, url_for, request, send_from_directory
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_wtf import CSRFProtect
+from flask_session import Session
+import redis
 from datetime import timedelta
 from dotenv import load_dotenv
 from icecream import ic
 import x, uuid, time, os, random
 
+ic.configureOutput(prefix='***** | ', includeContext=True)
+
 # Load .env før Flask-app initialiseres
 load_dotenv()
-ic.configureOutput(prefix='***** | ', includeContext=True)
 
 # Flask-app
 app = Flask(__name__)
-
-# CSRF-beskyttelse
-csrf = CSRFProtect(app)
 
 # Hemmelig nøgle fra miljø
 app.secret_key = os.environ["FLASK_SECRET_KEY"]
 
 # Cookie-konfiguration for maksimal sikkerhed
 app.config.update({
-    'SESSION_COOKIE_SECURE': True, # Kun send cookies over HTTPS
-    'SESSION_COOKIE_HTTPONLY': True, # Forhindrer JavaScript i at få adgang til cookien
-    'SESSION_COOKIE_SAMESITE': 'Strict', # Dette hjælper med at forhindre CSRF-angreb
-    'PERMANENT_SESSION_LIFETIME': timedelta(minutes=30), # session udløber efter 30 minutter
-    'SESSION_COOKIE_NAME': 'viento_session', # Navnet på session-cookien
+    'SESSION_COOKIE_SECURE': True,
+    'SESSION_COOKIE_HTTPONLY': True,
+    'SESSION_COOKIE_SAMESITE': 'Strict',
+    'PERMANENT_SESSION_LIFETIME': timedelta(minutes=30),
+    'SESSION_COOKIE_NAME': 'viento_session',
+    'SESSION_TYPE': 'redis',
+    'SESSION_REDIS': redis.Redis(
+        host=os.environ.get("REDIS_HOST", "localhost"),
+        port=int(os.environ.get("REDIS_PORT", 6379)),
+        db=0
+    )
 })
+# Flask-Session
+sess = Session(app)
+
+# CSRF-beskyttelse
+csrf = CSRFProtect(app)
+
+# Flask-Cache
 
 ##############################
 ##############################

@@ -5,12 +5,15 @@ services:
       dockerfile: Dockerfile
     container_name: fulldemo_flask_exam
     depends_on:
+      - redis
       - mysql
     environment:
       DB_HOST: mysql
       DB_USER: root
       DB_PASSWORD: password
       DB_NAME: company
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
     ports:
       - 80:80
     volumes:
