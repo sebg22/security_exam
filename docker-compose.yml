@@ -8,14 +8,19 @@ services:
       - redis
       - mysql
     environment:
+      FLASK_ENV: development
+      SESSION_COOKIE_SECURE: "False"
+      SESSION_COOKIE_SAMESITE: Strict
+
       DB_HOST: mysql
       DB_USER: root
       DB_PASSWORD: password
       DB_NAME: company
+
       REDIS_HOST: redis
       REDIS_PORT: 6379
     ports:
-      - 80:80
+      - "80:80"
     volumes:
       - .:/app
 

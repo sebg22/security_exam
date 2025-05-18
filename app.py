@@ -14,76 +14,70 @@ ic.configureOutput(prefix='***** | ', includeContext=True)
 # Load .env før Flask-app initialiseres
 load_dotenv()
 
-# Flask-app
 app = Flask(__name__)
 
 # Hemmelig nøgle fra miljø
 app.secret_key = os.environ["FLASK_SECRET_KEY"]
 
-# Cookie-konfiguration for maksimal sikkerhed
+# Bestem om vi kører i produktion
+IS_PRODUCTION = os.getenv("FLASK_ENV") == "production"
+
+# Hent cookie-indstillinger fra miljø eller brug default
+SESSION_SECURE = os.getenv("SESSION_COOKIE_SECURE", str(IS_PRODUCTION)) == "True"
+SESSION_SAMESITE = os.getenv("SESSION_COOKIE_SAMESITE", "Strict")
+SESSION_NAME = os.getenv("SESSION_COOKIE_NAME", "viento_session")
+SESSION_LIFETIME_MIN = int(os.getenv("PERMANENT_SESSION_LIFETIME_MINUTES", "30"))
+
+# Redis-konfiguration fra miljø
+REDIS_HOST = os.getenv("REDIS_HOST", "redis")
+REDIS_PORT = int(os.getenv("REDIS_PORT", 6379))
+
 app.config.update({
-    'SESSION_COOKIE_SECURE': True,
     'SESSION_COOKIE_HTTPONLY': True,
-    'SESSION_COOKIE_SAMESITE': 'Strict',
-    'PERMANENT_SESSION_LIFETIME': timedelta(minutes=30),
-    'SESSION_COOKIE_NAME': 'viento_session',
+    'SESSION_COOKIE_SECURE': SESSION_SECURE,            # True kun i produktion
+    'SESSION_COOKIE_SAMESITE': SESSION_SAMESITE,
+    'PERMANENT_SESSION_LIFETIME': timedelta(minutes=SESSION_LIFETIME_MIN),
+    'SESSION_COOKIE_NAME': SESSION_NAME,
     'SESSION_TYPE': 'redis',
-    'SESSION_REDIS': redis.Redis(
-        host=os.environ.get("REDIS_HOST", "localhost"),
-        port=int(os.environ.get("REDIS_PORT", 6379)),
-        db=0
-    )
+    'SESSION_REDIS': redis.Redis(host=REDIS_HOST, port=REDIS_PORT, db=0)
 })
-# Flask-Session
+
+# Initialiser Flask-Session
 sess = Session(app)
 
 # CSRF-beskyttelse
 csrf = CSRFProtect(app)
 
-# 
 @app.before_request
 def set_csp_nonce():
-    # Lav en tilfældig base64-streng til denne request
     g.csp_nonce = secrets.token_urlsafe(16)
-# disse headers tilføjes i alle responses ved at bruge @app.after_request.
+
 @app.after_request
 def add_security_headers(response):
-    # Hent nonce fra g
     nonce = getattr(g, "csp_nonce", "")
-    # Byg CSP-header-strengen med nonce
     csp = (
         "default-src 'self'; "
         f"script-src 'self' https://unpkg.com 'nonce-{nonce}'; "
-        "style-src 'self' https://unpkg.com;  "
-        "img-src 'self' data:; "
+        "style-src 'self' https://unpkg.com; "
+        "img-src 'self' data: https://*.tile.openstreetmap.org https://unpkg.com; "
         "font-src 'self'; "
         "connect-src 'self'; "
         "form-action 'self';"
     )
-    # Forhindrer MIME-sniffing
-    response.headers["X-Content-Type-Options"] = "nosniff"
-    # Aktivér XSS-beskyttelse i ældre browsere
-    response.headers["X-XSS-Protection"] = "1; mode=block"
-    # Blokerer clickjacking
-    response.headers["X-Frame-Options"] = "DENY"
-    # HSTS: tving HTTPS i 1 år + subdomæner
-    response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
-    # Content Security Policy med nonce
-    response.headers["Content-Security-Policy"] = csp
-    # Referer-policy
-    response.headers["Referrer-Policy"] = "no-referrer-when-downgrade"
-    # Deaktiver unødvendige browser-API’er
-    response.headers["Permissions-Policy"] = (
-        "geolocation=(), microphone=(), camera=(), interest-cohort=()"
-    )
-    # Certificate Transparency
-    response.headers["Expect-CT"] = "enforce, max-age=86400"
-
+    response.headers.update({
+        "X-Content-Type-Options": "nosniff",
+        "X-XSS-Protection": "1; mode=block",
+        "X-Frame-Options": "DENY",
+        "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+        "Content-Security-Policy": csp,
+        "Referrer-Policy": "no-referrer-when-downgrade",
+        "Permissions-Policy": "geolocation=(), microphone=(), camera=(), interest-cohort=()",
+        "Expect-CT": "enforce, max-age=86400"
+    })
     return response
 
 @app.context_processor
 def inject_nonce():
-    # Gør noncen tilgængelig i alle templates som {{ csp_nonce }}
     return {"csp_nonce": getattr(g, "csp_nonce", "")}
 
 
