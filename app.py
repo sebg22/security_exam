@@ -796,6 +796,15 @@ def add_comment(item_pk):
         # Perform the database insertion
         cursor.execute(sql, (comment_pk, user_pk, str(item_pk), comment_text, created_at, updated_at))
         db.commit()
+
+         # Fetch the newly inserted comment with user info
+        cursor.execute("""
+            SELECT comment_text, created_at, user_name, item_fk
+            FROM comments
+            JOIN users ON comments.user_fk = users.user_pk
+            WHERE comment_pk = %s
+        """, (comment_pk,))
+        comment = cursor.fetchone()
     except Exception as ex:
         traceback.print_exc()
         return "Database error", 500
@@ -803,7 +812,7 @@ def add_comment(item_pk):
         cursor.close()
         db.close()
 
-    return "Comment added successfully", 201
+    return render_template("/_single_comment.html", comment=comment)
 
 
 ##############################
