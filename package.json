@@ -1,0 +1,15 @@
+{
+  "name": "security_exam",
+  "version": "1.0.0",
+  "description": "Build-script for statisk MojoCSS generation",
+  "type": "module",
+  "main": "build-css.js",
+  "scripts": {
+    "build-css": "node build-css.js"
+  },
+  "devDependencies": {
+    "jsdom": "^26.1.0",
+    "mojocss": "^0.2.0"
+  },
+  "license": "ISC"
+}

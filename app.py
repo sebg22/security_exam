@@ -1,8 +1,9 @@
-from flask import Flask, session, render_template, redirect, url_for, request, send_from_directory
+from flask import Flask, session, render_template, redirect, url_for, request, g, send_from_directory
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_wtf import CSRFProtect
 from flask_session import Session
 import redis
+import secrets
 from datetime import timedelta
 from dotenv import load_dotenv
 from icecream import ic
@@ -39,7 +40,52 @@ sess = Session(app)
 # CSRF-beskyttelse
 csrf = CSRFProtect(app)
 
-# Flask-Cache
+# 
+@app.before_request
+def set_csp_nonce():
+    # Lav en tilfældig base64-streng til denne request
+    g.csp_nonce = secrets.token_urlsafe(16)
+# disse headers tilføjes i alle responses ved at bruge @app.after_request.
+@app.after_request
+def add_security_headers(response):
+    # Hent nonce fra g
+    nonce = getattr(g, "csp_nonce", "")
+    # Byg CSP-header-strengen med nonce
+    csp = (
+        "default-src 'self'; "
+        f"script-src 'self' https://unpkg.com 'nonce-{nonce}'; "
+        "style-src 'self' https://unpkg.com;  "
+        "img-src 'self' data:; "
+        "font-src 'self'; "
+        "connect-src 'self'; "
+        "form-action 'self';"
+    )
+    # Forhindrer MIME-sniffing
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    # Aktivér XSS-beskyttelse i ældre browsere
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    # Blokerer clickjacking
+    response.headers["X-Frame-Options"] = "DENY"
+    # HSTS: tving HTTPS i 1 år + subdomæner
+    response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+    # Content Security Policy med nonce
+    response.headers["Content-Security-Policy"] = csp
+    # Referer-policy
+    response.headers["Referrer-Policy"] = "no-referrer-when-downgrade"
+    # Deaktiver unødvendige browser-API’er
+    response.headers["Permissions-Policy"] = (
+        "geolocation=(), microphone=(), camera=(), interest-cohort=()"
+    )
+    # Certificate Transparency
+    response.headers["Expect-CT"] = "enforce, max-age=86400"
+
+    return response
+
+@app.context_processor
+def inject_nonce():
+    # Gør noncen tilgængelig i alle templates som {{ csp_nonce }}
+    return {"csp_nonce": getattr(g, "csp_nonce", "")}
+
 
 ##############################
 ##############################
