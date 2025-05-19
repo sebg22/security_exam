@@ -12,6 +12,7 @@ import x, uuid, time, os, random, traceback
 
 ic.configureOutput(prefix='***** | ', includeContext=True)
 
+
 # Load .env før Flask-app initialiseres
 load_dotenv()
 
