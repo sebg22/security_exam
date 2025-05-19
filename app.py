@@ -16,6 +16,7 @@ load_dotenv()
 # Flask-app
 app = Flask(__name__)
 
+
 # Hemmelig nøgle fra miljø
 app.secret_key = os.environ["FLASK_SECRET_KEY"]
 
@@ -28,10 +29,10 @@ app.config.update({
     'SESSION_COOKIE_NAME': 'viento_session',
     'SESSION_TYPE': 'redis',
     'SESSION_REDIS': redis.Redis(
-        host=os.environ.get("REDIS_HOST", "localhost"),
-        port=int(os.environ.get("REDIS_PORT", 6379)),
-        db=0
-    )
+        host=os.environ.get("REDIS_HOST"),
+        port=int(os.environ.get("REDIS_PORT")),
+       db=0
+   )
 })
 # Flask-Session
 sess = Session(app)
@@ -434,8 +435,10 @@ def _________POST_________(): pass
 
 @app.post("/logout")
 def logout():
-    session.pop("user", None)
-    return redirect(url_for("view_login"))
+    session.clear()                                         # Tøm server-session
+    resp = redirect(url_for("view_login"))                  # Byg redirect-response
+    resp.delete_cookie(app.config['SESSION_COOKIE_NAME'])   # Slet viento_session-cookien
+    return resp
 
 ##############################
 @app.post("/signup_customer")
