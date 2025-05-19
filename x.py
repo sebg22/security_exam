@@ -125,7 +125,7 @@ def validate_uuid4(uuid4 = ""):
     return uuid4
 
 ##############################
-UPLOAD_ITEM_FOLDER = './images'
+UPLOAD_ITEM_FOLDER = './static/dishes'
 ALLOWED_ITEM_IMAGE_EXTENSIONS = {"png", "jpg", "jpeg", "gif", "JPG"}
 def validate_individual_file(file):
     if file.filename == "":
@@ -202,6 +202,19 @@ def validate_item_price():
         raise_custom_exception(error, 400)
     
     return float(price)  # Return the price as a float for further processing
+
+###############################
+# Validation for comments
+COMMENT_MIN = 5
+COMMENT_MAX = 100
+REGEX_COMMENT = f"^[^<>\\\"']{{{COMMENT_MIN},{COMMENT_MAX}}}$"
+
+def validate_comment():
+    error = f"comment must be between {COMMENT_MIN} and {COMMENT_MAX} characters and not contain <, >, \" or '"
+    comment_text = request.form.get("comment_text", "").strip()
+    if not re.match(REGEX_COMMENT, comment_text): 
+        raise_custom_exception(error, 400)
+    return comment_text
 
 ##############################
 def send_reset_email(user_email, user_reset_password_key):

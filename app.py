@@ -12,6 +12,7 @@ import x, uuid, time, os, random, traceback
 
 ic.configureOutput(prefix='***** | ', includeContext=True)
 
+
 # Load .env før Flask-app initialiseres
 load_dotenv()
 
@@ -788,7 +789,7 @@ def add_comment(item_pk):
     print("Received data:", data)
 
     # Check if the data contains 'comment_text'
-    comment_text = data.get("comment_text")
+    comment_text = x.validate_comment()
     if not comment_text:
         print("No comment text provided")
         return "Comment text is required", 400

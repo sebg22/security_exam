@@ -6,6 +6,7 @@ services:
     container_name: fulldemo_flask_exam
     depends_on:
       - mysql
+      - redis
       # - mysql_comments  # Commented out
     env_file:
       - .env
