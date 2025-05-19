@@ -203,6 +203,19 @@ def validate_item_price():
     
     return float(price)  # Return the price as a float for further processing
 
+###############################
+# Validation for comments
+COMMENT_MIN = 5
+COMMENT_MAX = 100
+REGEX_COMMENT = f"^[^<>\\\"']{{{COMMENT_MIN},{COMMENT_MAX}}}$"
+
+def validate_comment():
+    error = f"comment must be between {COMMENT_MIN} and {COMMENT_MAX} characters and not contain <, >, \" or '"
+    comment_text = request.form.get("comment_text", "").strip()
+    if not re.match(REGEX_COMMENT, comment_text): 
+        raise_custom_exception(error, 400)
+    return comment_text
+
 ##############################
 def send_reset_email(user_email, user_reset_password_key):
     try:
