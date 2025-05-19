@@ -4,7 +4,7 @@
 
     <h2 class="text-(2rem) text-a-center py-8" md="text-(3rem)">Login here</h2>
     <form id="frm_user_login" class="w-60% d-flex flex-col gap-4 mx-auto" md="w-40%">
-
+     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         {% if message %}
         <div class="text-c-green text-200">
             {{ message }}

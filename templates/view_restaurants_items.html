@@ -31,6 +31,7 @@
 
                 <!-- Add to Basket -->
                 <form id="frm-add-basket-{{ item['item_pk'] }}">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <button mix-post="/restaurant/{{restaurant['user_pk']}}/add_to_basket/{{ item['item_title'] }}"
                         mix-data="#frm-add-basket-{{ item['item_pk'] }}" mix-target="#basket"
                         class="w-full bg-c-(#00C2E8) cursor-pointer text-c-(#FFFFFF)">
@@ -75,6 +76,7 @@
             </section>
 
             <form id="frm-buy-all">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <button mix-post="{{ url_for('buy_all') }}" mix-data="#frm-buy-all" mix-target="#basket"
                     class="w-full cursor-pointer bg-c-(#202125) text-c-(#FFFFFF) mt-8">
                     Buy All

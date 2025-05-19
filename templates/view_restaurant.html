@@ -4,6 +4,7 @@
     <div class="mx-10" md="border-c-(#E4E4E4) border-r-2 pr-8 mt-5">
         <h2>Create an item here</h2>
         <form id="frm_create_item" class="w-100% d-flex flex-col gap-4 mx-auto mt-4">
+         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="d-flex flex-col">
                 <label for="item_title" class="d-flex">
                     <span>Item title</span>
@@ -45,6 +46,7 @@
             <section class="border-c-(#E4E4E4) border-b-2 pb-8">
                 <form id="frm_item_update-{{item['item_pk']}}" class="mt-4 d-flex flex-col"
                     enctype="multipart/form-data">
+                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <input class="mb-4" type="text" name="item_title" value="{{item['item_title']}}"
                         mix-check="{{ x.ITEM_TITLE_REGEX }}">
                         <input
@@ -96,6 +98,7 @@
 
                 <!-- Separate Delete Form -->
                 <form id="frm_item_delete-{{item['item_pk']}}" class="mt-4">
+                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <button mix-put="/delete_item/{{ item['item_pk'] }}" mix-data="#frm_item_delete-{{item['item_pk']}}"
                         class="cursor-pointer bg-c-(#FE5B52) w-full text-c-(#ffffff) a-items-center">
                         <span>
