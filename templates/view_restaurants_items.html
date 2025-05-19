@@ -53,7 +53,6 @@
                 <!-- Add a Comment -->
                 <form id="frm-add-comment-{{ item['item_pk'] }}" action="/items/{{ item['item_pk'] }}/comments"
                     method="post" class="mt-4 d-flex flex-col gap-2 comment-form">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <textarea name="comment_text" placeholder="Leave a comment..." rows="2"
                         class="w-full border-1 border-c-(#E4E4E4) rounded-md pa-2"></textarea>
                     <button class="bg-c-(#00C2E8) text-c-(#FFFFFF) px-4 py-2 rounded-3 w-full">

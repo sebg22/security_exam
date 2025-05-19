@@ -125,7 +125,7 @@ def validate_uuid4(uuid4 = ""):
     return uuid4
 
 ##############################
-UPLOAD_ITEM_FOLDER = './images'
+UPLOAD_ITEM_FOLDER = './static/dishes'
 ALLOWED_ITEM_IMAGE_EXTENSIONS = {"png", "jpg", "jpeg", "gif", "JPG"}
 def validate_individual_file(file):
     if file.filename == "":
