@@ -43,20 +43,16 @@
                     <h4>Comments:</h4>
                     <div id="comments-{{ item['item_pk'] }}">
                         {% for comment in comments %}
-                            {% if comment['item_fk'] == item['item_pk'] %}
-                                <p><strong>{{ comment['user_name'] }}</strong> - {{ comment['created_at'] }}:</p>
-                                <p>{{ comment['comment_text'] }}</p>
-                                <hr>
-                            {% endif %}
+                        {% if comment['item_fk'] == item['item_pk'] %}
+                        {% include "_single_comment.html" %}
+                        {% endif %}
                         {% endfor %}
                     </div>
                 </div>
 
                 <!-- Add a Comment -->
-                <form id="frm-add-comment-{{ item['item_pk'] }}" 
-                      action="/items/{{ item['item_pk'] }}/comments" 
-                      method="post" 
-                      class="mt-4 d-flex flex-col gap-2 comment-form">
+                <form id="frm-add-comment-{{ item['item_pk'] }}" action="/items/{{ item['item_pk'] }}/comments"
+                    method="post" class="mt-4 d-flex flex-col gap-2 comment-form">
                     <textarea name="comment_text" placeholder="Leave a comment..." rows="2"
                         class="w-full border-1 border-c-(#E4E4E4) rounded-md pa-2"></textarea>
                     <button class="bg-c-(#00C2E8) text-c-(#FFFFFF) px-4 py-2 rounded-3 w-full">
