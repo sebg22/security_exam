@@ -21,7 +21,7 @@ document.querySelectorAll(".comment-form").forEach((form) => {
       // Clear the textarea
       form.querySelector("textarea").value = "";
     } else {
-      alert("Failed to add comment. Please try again.");
+      alert("Failed to add comment. It must be between 5 and 100 characters, and not use < > ' \".");
     }
   });
 });
