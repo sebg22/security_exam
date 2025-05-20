@@ -24,7 +24,7 @@ app.secret_key = os.environ["FLASK_SECRET_KEY"]
 
 # Cookie-konfiguration for maksimal sikkerhed
 app.config.update({
-    'SESSION_COOKIE_SECURE': False,  # True for HTTPS
+    'SESSION_COOKIE_SECURE': True,  # True for HTTPS
     'SESSION_COOKIE_HTTPONLY': True,
     'SESSION_COOKIE_SAMESITE': 'Strict',
     'PERMANENT_SESSION_LIFETIME': timedelta(minutes=30),
