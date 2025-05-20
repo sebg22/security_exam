@@ -36,6 +36,39 @@ app.config.update({
         db=0
     )
 })
+
+#@app.before_request
+#def set_csp_nonce():
+#    g.csp_nonce = secrets.token_urlsafe(16)
+####   Remember to import g from flask.
+@app.after_request
+def add_security_headers(response):
+#    nonce = getattr(g, "csp_nonce", "")
+    csp = (
+    #    "default-src 'self'; "
+    #    f"script-src 'self' https://unpkg.com 'nonce-{nonce}'; "
+    #    "style-src 'self' https://unpkg.com 'unsafe-hashes' 'sha256-l1tddhbnVEeLvikhXZBh19U+4GR01SpSEULg4Y/Xexg='; "
+        "img-src 'self' data: https://*.tile.openstreetmap.org https://unpkg.com; "
+        "font-src 'self'; "
+        "connect-src 'self'; "
+        "form-action 'self';"
+    )
+    response.headers.update({
+        "X-Content-Type-Options": "nosniff",
+        "X-XSS-Protection": "1; mode=block",
+        "X-Frame-Options": "DENY",
+        "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+        "Content-Security-Policy": csp,
+        "Referrer-Policy": "no-referrer-when-downgrade",
+        "Permissions-Policy": "geolocation=(), microphone=(), camera=(), interest-cohort=()",
+        "Expect-CT": "enforce, max-age=86400"
+    })
+    return response
+
+#@app.context_processor
+#def inject_nonce():
+#    return {"csp_nonce": getattr(g, "csp_nonce", "")}
+
 # Flask-Session
 sess = Session(app)
 
