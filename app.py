@@ -24,16 +24,16 @@ app.secret_key = os.environ["FLASK_SECRET_KEY"]
 
 # Cookie-konfiguration for maksimal sikkerhed
 app.config.update({
-    'SESSION_COOKIE_SECURE': True,
+    'SESSION_COOKIE_SECURE': False,  # True for HTTPS
     'SESSION_COOKIE_HTTPONLY': True,
     'SESSION_COOKIE_SAMESITE': 'Strict',
     'PERMANENT_SESSION_LIFETIME': timedelta(minutes=30),
     'SESSION_COOKIE_NAME': 'viento_session',
     'SESSION_TYPE': 'redis',
     'SESSION_REDIS': redis.Redis(
-        host=os.environ.get("REDIS_HOST", "localhost"),
-        port=int(os.environ.get("REDIS_PORT", 6379)),
-        db=0
+        host=os.environ.get("REDIS_HOST"), 
+        port=int(os.environ.get("REDIS_PORT")), 
+        db=0 # Redis database number
     )
 })
 
