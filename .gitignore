@@ -1,5 +1,5 @@
 __pycache__
 .env
 flask_session
-database_backup/
+database_backup
 README.md
