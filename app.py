@@ -818,6 +818,17 @@ def create_item():
 ##############################
 @app.post("/items/<uuid:item_pk>/comments")
 def add_comment(item_pk):
+    #Tjek at brugeren er logget ind/findes i sessionen
+    user = session.get("user")
+    if not user:
+        return "User not logged in", 401
+    
+    #Tjek om brugeren har den nødvendige rolle "customer" for at kunne udføre en kommentar
+    roles = user.get("roles", [])
+    if "customer" not in roles:
+        return "Access denied: Only customers can post comments", 403
+
+
     data = request.form
     print("Received data:", data)
 
@@ -828,7 +839,6 @@ def add_comment(item_pk):
         return "Comment text is required", 400
 
     # Get the current user from the session
-    user = session.get("user")
     user_pk = user.get("user_pk") if user else None
 
     # Connect to the database
