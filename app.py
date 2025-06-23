@@ -24,13 +24,13 @@ app.secret_key = os.environ["FLASK_SECRET_KEY"]
 
 # Cookie-konfiguration for maksimal sikkerhed
 app.config.update({
-    'SESSION_COOKIE_SECURE': True,  # True for HTTPS
-    'SESSION_COOKIE_HTTPONLY': True,
-    'SESSION_COOKIE_SAMESITE': 'Strict',
-    'PERMANENT_SESSION_LIFETIME': timedelta(minutes=30),
+    'SESSION_COOKIE_SECURE': True,  # Cookies sendes kun over HTTPS for at beskytter mod dataaflytning
+    'SESSION_COOKIE_HTTPONLY': True, # JavaScript kan ikke tilgå session-cookies så de er sikrere mod XSS-angreb, kun tilgængelige for http requests
+    'SESSION_COOKIE_SAMESITE': 'Strict', # Forhindrer CSRF-angreb ved at sikre, at cookies kun sendes med requests fra samme site
+    'PERMANENT_SESSION_LIFETIME': timedelta(minutes=30), # Sessionens levetid er 30 minutter, kunne noget smartere gøres?
     'SESSION_COOKIE_NAME': 'viento_session',
-    'SESSION_TYPE': 'redis',
-    'SESSION_REDIS': redis.Redis(
+    'SESSION_TYPE': 'redis', # Flask-Session bruger Redis til at gemme sessioner
+    'SESSION_REDIS': redis.Redis( # Forbindelse til Redis-server, dvs. vores sessions gemmes i Redis
         host=os.environ.get("REDIS_HOST"), 
         port=int(os.environ.get("REDIS_PORT")), 
         db=0 # Redis database number
@@ -43,25 +43,27 @@ app.config.update({
 ####   Remember to import g from flask.
 @app.after_request
 def add_security_headers(response):
-#    nonce = getattr(g, "csp_nonce", "")
+    # Content-Security-Policy: Definerer hvad browseren må hente og køre
     csp = (
-    #    "default-src 'self'; "
-    #    f"script-src 'self' https://unpkg.com 'nonce-{nonce}'; "
-    #    "style-src 'self' https://unpkg.com 'unsafe-hashes' 'sha256-l1tddhbnVEeLvikhXZBh19U+4GR01SpSEULg4Y/Xexg='; "
-        "img-src 'self' data: https://*.tile.openstreetmap.org https://unpkg.com; "
-        "font-src 'self'; "
-        "connect-src 'self'; "
-        "form-action 'self';"
+        # "default-src 'self'; "  # Tillader alt indhold (scripts, styles, billeder, etc.) kun fra vores eget domæne
+        # f"script-src 'self' https://unpkg.com 'nonce-{nonce}'; "  # self: Tillad scripts fra eget domæne, nonce: Tillad kun udvalgte inline scripts med korrekt token, unpkg: nødvendigt pga. Mojo CSS
+        # "style-src 'self' https://unpkg.com 'unsafe-hashes' 'sha256-...'; "  # Tillad styles fra os selv og unpkg. unsafe-hashes + sha256 er nødvendigt for styles der loades via JS (Mojo CSS)
+        "img-src 'self' data: https://*.tile.openstreetmap.org https://unpkg.com; "  # Tillad billeder fra eget domæne, data-URLs (små ikoner), OpenStreetMap og unpkg (hvis vi bruger ikoner/tiles)
+        "font-src 'self'; "  # Kun vores egen server må levere skrifttyper
+        "connect-src 'self'; "  # Fetch/AJAX må kun hente data fra os selv (beskytter mod datalæk via XHR/fetch)
+        "form-action 'self';"  # Formularer må kun sende data til vores egen server (beskytter mod CSRF-angreb)
     )
+
+    # Security headers: Ekstra beskyttelse i browseren
     response.headers.update({
-        "X-Content-Type-Options": "nosniff",
-        "X-XSS-Protection": "1; mode=block",
-        "X-Frame-Options": "DENY",
-        "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
-        "Content-Security-Policy": csp,
-        "Referrer-Policy": "no-referrer-when-downgrade",
-        "Permissions-Policy": "geolocation=(), microphone=(), camera=(), interest-cohort=()",
-        "Expect-CT": "enforce, max-age=86400"
+        "X-Content-Type-Options": "nosniff",  # Forhindrer browseren i at gætte filtyper – den skal følge Content-Type headeren
+        "X-XSS-Protection": "1; mode=block",  # Aktiverer XSS-beskyttelse i ældre browsere (de fleste ignorerer dog denne i dag)
+        "X-Frame-Options": "DENY",  # Forhindrer at siden vises i en iframe – beskytter mod clickjacking
+        "Strict-Transport-Security": "max-age=31536000; includeSubDomains",  # Tvinger browseren til kun at bruge HTTPS i 1 år frem
+        "Content-Security-Policy": csp,  # Selve CSP-reglerne fra oven
+        "Referrer-Policy": "no-referrer-when-downgrade",  # Sender kun referrer (hvor man kom fra) hvis man går fra HTTPS til HTTPS
+        "Permissions-Policy": "geolocation=(), microphone=(), camera=(), interest-cohort=()",  # Slår adgang til mikrofon, kamera og tracking fra
+        "Expect-CT": "enforce, max-age=86400"  # Sørger for korrekt brug af TLS-certifikater (Certificate Transparency)
     })
     return response
 
